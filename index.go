@@ -6,21 +6,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
-const (
-	DB_USER     = "phrutkqm"
-	DB_PASSWORD = "SUEbRD4SrNCxbYcbvi3FxmKL3x4Gws1Z"
-	DB_NAME     = "phrutkqm"
-	DB_HOST     = "rosie.db.elephantsql.com"
-	DB_PORT     = 5432
+var (
+	DB_USER     = os.Getenv("DB_USER")
+	DB_PASSWORD = os.Getenv("DB_PASSWORD")
+	DB_NAME     = os.Getenv("DB_NAME")
+	DB_HOST     = os.Getenv("DB_HOST")
+	DB_PORT     = os.Getenv("DB_PORT")
 )
 
 func setupDB() *sql.DB {
-	dbinfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
+	dbinfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
 	db, err := sql.Open("postgres", dbinfo)
 	if err != nil {
 		panic(err)
