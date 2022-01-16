@@ -110,6 +110,7 @@ func GetMovies(w http.ResponseWriter, r *http.Request) {
 	var response = JsonResponse{Type: "success", Data: movies}
 
 	json.NewEncoder(w).Encode(response)
+	defer db.Close()
 }
 
 // Create a movie
@@ -137,6 +138,7 @@ func CreateMovie(w http.ResponseWriter, r *http.Request) {
 		checkErr(err)
 
 		response = JsonResponse{Type: "success", Message: "The movie has been inserted successfully!"}
+		defer db.Close()
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -165,6 +167,7 @@ func DeleteMovie(w http.ResponseWriter, r *http.Request) {
 		checkErr(err)
 
 		response = JsonResponse{Type: "success", Message: "The movie has been deleted successfully!"}
+		defer db.Close()
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -188,4 +191,5 @@ func DeleteMovies(w http.ResponseWriter, r *http.Request) {
 	var response = JsonResponse{Type: "success", Message: "All movies have been deleted successfully!"}
 
 	json.NewEncoder(w).Encode(response)
+	defer db.Close()
 }
