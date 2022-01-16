@@ -12,15 +12,28 @@ import (
 )
 
 const (
-	DB_USER     = "moviesadmin"
-	DB_PASSWORD = "admin"
-	DB_NAME     = "apidata"
+	DB_USER     = "phrutkqm"
+	DB_PASSWORD = "SUEbRD4SrNCxbYcbvi3FxmKL3x4Gws1Z"
+	DB_NAME     = "phrutkqm"
+	DB_HOST     = "rosie.db.elephantsql.com"
+	DB_PORT     = 5432
 )
 
 func setupDB() *sql.DB {
-	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
+	dbinfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
 	db, err := sql.Open("postgres", dbinfo)
-	checkErr(err)
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Successfully connected to database!")
+
+	//checkErr(err)
 	return db
 }
 
