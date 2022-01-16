@@ -12,6 +12,18 @@ import (
 	_ "github.com/lib/pq"
 )
 
+/* when you want to hardcode DB connection string values use below snip
+
+const (
+	DB_USER     = "db_username"
+	DB_PASSWORD = "db_password"
+	DB_NAME     = "db_name"
+	DB_HOST     = "db_servername"
+	DB_PORT     = db_port_number
+)
+
+*/
+
 var (
 	DB_USER     = os.Getenv("DB_USER")
 	DB_PASSWORD = os.Getenv("DB_PASSWORD")
@@ -36,6 +48,7 @@ func setupDB() *sql.DB {
 
 	//checkErr(err)
 	return db
+
 }
 
 type Movie struct {
@@ -60,7 +73,9 @@ func main() {
 
 	router.HandleFunc("/movies/", DeleteMovies).Methods("DELETE")
 
-	fmt.Println("Server at 8001")
+	router.HandleFunc("/movies/{movieid}", UpdateMovies).Methods("PUT")
+
+	fmt.Println("Server Listening at 8001")
 
 	log.Fatal(http.ListenAndServe(":8001", router))
 
@@ -112,6 +127,7 @@ func GetMovies(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(response)
 	defer db.Close()
+
 }
 
 // Create a movie
@@ -120,6 +136,7 @@ func GetMovies(w http.ResponseWriter, r *http.Request) {
 func CreateMovie(w http.ResponseWriter, r *http.Request) {
 	movieID := r.FormValue("movieid")
 	movieName := r.FormValue("moviename")
+	//db := setupDB()
 
 	var response = JsonResponse{}
 
@@ -140,15 +157,18 @@ func CreateMovie(w http.ResponseWriter, r *http.Request) {
 
 		response = JsonResponse{Type: "success", Message: "The movie has been inserted successfully!"}
 		defer db.Close()
+
 	}
 
 	json.NewEncoder(w).Encode(response)
+
 }
 
 // Delete a movie
 
 // response and request handlers
 func DeleteMovie(w http.ResponseWriter, r *http.Request) {
+	//db := setupDB()
 	params := mux.Vars(r)
 
 	movieID := params["movieid"]
@@ -169,9 +189,11 @@ func DeleteMovie(w http.ResponseWriter, r *http.Request) {
 
 		response = JsonResponse{Type: "success", Message: "The movie has been deleted successfully!"}
 		defer db.Close()
+
 	}
 
 	json.NewEncoder(w).Encode(response)
+
 }
 
 // Delete all movies
@@ -193,4 +215,36 @@ func DeleteMovies(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(response)
 	defer db.Close()
+}
+
+// Update movies using id of a movie
+
+func UpdateMovies(w http.ResponseWriter, r *http.Request) {
+	//db := setupDB()
+	params := mux.Vars(r)
+
+	movieID := params["movieid"]
+	movieName := r.FormValue("moviename")
+
+	var response = JsonResponse{}
+
+	if movieID == "" {
+		response = JsonResponse{Type: "error", Message: "You are missing movieID parameter to update a movie."}
+	} else {
+		db := setupDB()
+
+		printMessage("Updating movie from DB")
+
+		_, err := db.Exec("UPDATE movies SET movieName=$2  where movieID = $1", movieID, movieName)
+
+		// check errors
+		checkErr(err)
+
+		response = JsonResponse{Type: "success", Message: "The moviename has been updated successfully!"}
+		defer db.Close()
+
+	}
+
+	json.NewEncoder(w).Encode(response)
+
 }
