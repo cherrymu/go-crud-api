@@ -7,6 +7,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync/atomic"
+	_ "sync/atomic"
+	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -65,6 +68,15 @@ type JsonResponse struct {
 func main() {
 	router := mux.NewRouter()
 
+	isReady := &atomic.Value{}
+	isReady.Store(false)
+	go func() {
+		log.Printf("Readyz probe is negative by default...")
+		time.Sleep(10 * time.Second)
+		isReady.Store(true)
+		log.Printf("Readyz probe is positive.")
+	}()
+
 	router.HandleFunc("/movies/", GetMovies).Methods("GET")
 
 	router.HandleFunc("/movies/", CreateMovie).Methods("POST")
@@ -74,6 +86,10 @@ func main() {
 	router.HandleFunc("/movies/", DeleteMovies).Methods("DELETE")
 
 	router.HandleFunc("/movies/{movieid}", UpdateMovies).Methods("PUT")
+
+	router.HandleFunc("/healthz", healthz)
+
+	router.HandleFunc("/readyz", readyz(isReady))
 
 	fmt.Println("Server Listening at 8001")
 
@@ -247,4 +263,22 @@ func UpdateMovies(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(response)
 
+}
+
+// healthz handler serves as a liveness probe
+
+func healthz(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
+// readyz handler serves as a readiness probe
+
+func readyz(isReady *atomic.Value) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		if isReady == nil || !isReady.Load().(bool) {
+			http.Error(w, http.StatusText(http.StatusServiceUnavailable), http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
 }
