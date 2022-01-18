@@ -1,4 +1,4 @@
-# go-crud-api
+# Go API
 This is a repo with a simple API developed using Go performing basic CRUD operations when connected to a postgresql database using basic HTTP methods which can be deployed on kubernetes platform.
 
 This application will expose below endpoints for HTTP calls 
